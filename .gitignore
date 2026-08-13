@@ -1,0 +1,42 @@
+# General Python ignores
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment directories
+env/
+venv/
+.venv/
+
+# Environment variable files
+.env
+
+# Streamlit configuration (if not needed in repo)
+.streamlit/
+
+# IDE/editor folders
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Distribution / packaging
+build/
+Dist/
+*.egg-info/
+
+# Test and coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+,coverage.xml
+*.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS generated files
+.DS_Store
+Thumbs.db

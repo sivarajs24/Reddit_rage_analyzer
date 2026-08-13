@@ -1,0 +1,26 @@
+[
+    {
+        "id": "apps_0",
+        "type": "post",
+        "title": "Tired of just tracking steps? I built an AI tool to actually analyze your heart health.",
+        "body": "<!-- SC_OFF --><div class=\"md\"><p>Hey guys,</p> <p>I\u2019m working on <strong>CardioIQ</strong>, an AI-driven platform that utilizes AI to provide a comprehensive assessment of heart health. Instead of just showing you a graph of your pulse, it uses machine learning to analyze the relationship between your <strong>ECG, heart rate, BP, pulse ox, and lifestyle factors.</strong></p> <p><strong>How it works:</strong><br/> By feeding these data points into neural networks, CardioIQ produces a <strong>comprehensive cardiovascular health assessment.</strong> It provides detailed score reports flagging anything unusual and giving you a overall risk score.</p> <p><strong>What it analyzes:</strong></p> <ul> <li><strong>Multi-Factor Integration:</strong> Combines ECG patterns with pulse ox and BP for a holistic view.</li> <li><strong>Trend Analysis:</strong> Uses ML to see if your lifestyle changes (sleep, activity) are actually improving your cardiovascular health.</li> <li><strong>Personalized Reports:</strong> Generates a full assessment you can actually understand.</li> </ul> <p>I\u2019d love to get some feedback from the community.</p> <p>Check it out here: <a href=\"https://cardioiq.streamlit.app/\"><code>https://cardioiq.streamlit.app/</code></a></p> <p><em>Disclaimer: CardioIQ is for informational purposes and is not a replacement for professional medical consultation.</em></p> </div><!-- SC_ON --> &#32; submitted by &#32; <a href=\"https://www.reddit.com/user/Mental-Climate5798\"> /u/Mental-Climate5798 </a> <br/> <span><a href=\"https://www.reddit.com/gallery/1spc6z3\">[link]</a></span> &#32; <span><a href=\"https://www.reddit.com/r/apps/comments/1spc6z3/tired_of_just_tracking_steps_i_built_an_ai_tool/\">[comments]</a></span>",
+        "upvotes": 0,
+        "subreddit": "apps",
+        "timestamp": 0,
+        "datetime": "2026-04-18T23:02:14+00:00",
+        "url": "https://www.reddit.com/r/apps/comments/1spc6z3/tired_of_just_tracking_steps_i_built_an_ai_tool/",
+        "cleaned_text": "tired tracking steps built ai tool actually analyze heart health scoff div classmdphey guysp pim working strongcardioiqstrong aidriven platform utilizes ai provide comprehensive assessment heart health instead showing graph pulse uses machine learning analyze relationship strongecg heart rate bp pulse ox lifestyle factorsstrongp pstronghow worksstrongbr feeding data points neural networks cardioiq produces strongcomprehensive cardiovascular health assessmentstrong provides detailed score reports flagging anything unusual giving overall risk scorep pstrongwhat analyzesstrongp ul listrongmultifactor integrationstrong combines ecg patterns pulse ox bp holistic viewli listrongtrend analysisstrong uses ml see lifestyle changes sleep activity actually improving cardiovascular healthli listrongpersonalized reportsstrong generates full assessment actually understandli ul pid love get feedback communityp pcheck href pemdisclaimer cardioiq informational purposes replacement professional medical consultationemp div scon 32 submitted 32 href umentalclimate5798 br spana href 32 spana href"
+    },
+    {
+        "id": "apps_1",
+        "type": "post",
+        "title": "New to apps!",
+        "body": "<!-- SC_OFF --><div class=\"md\"><p>Hey, I want to build a few web apps for a blog. I know few options. What may be the best for low coding, must have the ability to create charts, tables etc</p> </div><!-- SC_ON --> &#32; submitted by &#32; <a href=\"https://www.reddit.com/user/Mattc478\"> /u/Mattc478 </a> <br/> <span><a href=\"https://www.reddit.com/r/apps/comments/1gl3t2v/new_to_apps/\">[link]</a></span> &#32; <span><a href=\"https://www.reddit.com/r/apps/comments/1gl3t2v/new_to_apps/\">[comments]</a></span>",
+        "upvotes": 0,
+        "subreddit": "apps",
+        "timestamp": 0,
+        "datetime": "2024-11-06T17:23:59+00:00",
+        "url": "https://www.reddit.com/r/apps/comments/1gl3t2v/new_to_apps/",
+        "cleaned_text": "new apps scoff div classmdphey want build web apps blog know options may best low coding must ability create charts tables etcp div scon 32 submitted 32 href umattc478 br spana href 32 spana href"
+    }
+]
