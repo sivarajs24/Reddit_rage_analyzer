@@ -91,7 +91,11 @@ def handle_chat(product_name, retrieved_docs):
             st.markdown(prompt)
             
         context = ""
-        for i, doc in enumerate(retrieved_docs[:10]):
+        # Dynamically retrieve new documents based on the chat query
+        with st.spinner("Searching database..."):
+            new_docs = retrieve_complaints(prompt, product_name, k=10)
+            
+        for i, doc in enumerate(new_docs):
             context += f"--- Document {i+1} ---\n{doc.page_content}\n\n"
             
         system_prompt = f"You are a helpful AI assistant answering questions about {product_name} complaints. Base your answers strictly on the context provided below.\n\nContext:\n{context}"
@@ -174,12 +178,12 @@ def render_search_form(compact=False):
 
 def run_analysis(product_name, custom_subs):
     with st.spinner(f"Scraping Reddit for '{product_name}'..."):
-        raw_data = scrape_reddit(product_name, limit_per_sub=5, custom_subreddits=custom_subs)
+        raw_data = scrape_reddit(product_name, limit_per_sub=50, custom_subreddits=custom_subs)
         if not raw_data:
             raise RuntimeError("No data found or scraping failed.")
 
     with st.spinner("Processing text and updating the vector database..."):
-        success = process_product(product_name)
+        success = process_product(raw_data, product_name)
         if not success:
             raise RuntimeError("Failed to process embeddings.")
 

@@ -6,7 +6,7 @@ import re
 import xml.etree.ElementTree as ET
 
 
-def scrape_reddit(product_name: str, limit_per_sub: int = 15, custom_subreddits: list = None):
+def scrape_reddit(product_name: str, limit_per_sub: int = 50, custom_subreddits: list = None):
     """
     Scrapes Reddit data by hitting the public RSS search feeds.
     Bypasses Reddit's 403 blocks on JSON endpoints.
@@ -34,9 +34,9 @@ def scrape_reddit(product_name: str, limit_per_sub: int = 15, custom_subreddits:
         try:
             # If "all" is specified, do a global search across all of Reddit
             if sub_name == "all":
-                url = f"https://www.reddit.com/search.rss?q={query}&sort=relevance"
+                url = f"https://www.reddit.com/search.rss?q={query}&sort=relevance&limit=100"
             else:
-                url = f"https://www.reddit.com/r/{sub_name}/search.rss?q={query}&restrict_sr=1"
+                url = f"https://www.reddit.com/r/{sub_name}/search.rss?q={query}&restrict_sr=1&limit=100"
             
             # Simple retry loop
             for attempt in range(2):
@@ -88,12 +88,7 @@ def scrape_reddit(product_name: str, limit_per_sub: int = 15, custom_subreddits:
     unique_data = {item['url']: item for item in collected_data if item['url']}.values()
     final_data = list(unique_data)
 
-    os.makedirs("data", exist_ok=True)
-    output_path = f"data/raw_{product_name.replace(' ', '_').lower()}.json"
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(final_data, f, indent=4)
-        
-    print(f"Scraped {len(final_data)} items. Saved to {output_path}")
+    print(f"Scraped {len(final_data)} items.")
     return final_data
 
 if __name__ == "__main__":
