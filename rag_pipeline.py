@@ -1,76 +1,104 @@
 import os
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_pinecone import PineconeVectorStore
+from langchain_community.retrievers import PineconeHybridSearchRetriever
+from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
+from langchain_core.documents import Document
+from langchain_core.callbacks import Callbacks
+from typing import Sequence
+from sentence_transformers import CrossEncoder
+from langchain_groq import ChatGroq
+from pinecone_text.sparse import BM25Encoder
+from pinecone import Pinecone
+import logging
+from pydantic import Field
 
-# Configuration must match embedder.py
+# Set logging for MultiQueryRetriever to see the generated queries
+logging.getLogger('langchain.retrievers.multi_query').setLevel(logging.INFO)
+
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+CROSS_ENCODER_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
-def get_retriever(product_name: str, k: int = 15):
-    """
-    Initializes and returns a LangChain retriever for the given product.
+class CustomCrossEncoderReranker(BaseDocumentCompressor):
+    model_name: str = CROSS_ENCODER_MODEL_NAME
+    top_n: int = 40
     
-    Args:
-        product_name (str): The product name to retrieve complaints for.
-        k (int): Number of top results to return.
+    # We must use PrivateAttr to prevent pydantic from trying to parse the CrossEncoder object
+    # But for simplicity, we just initialize it inside compress_documents on first run, 
+    # or use a property.
+    
+    def compress_documents(
+        self,
+        documents: Sequence[Document],
+        query: str,
+        callbacks: Callbacks = None,
+    ) -> Sequence[Document]:
+        if not documents:
+            return []
+            
+        print(f"Reranking {len(documents)} documents down to {self.top_n}...")
+        model = CrossEncoder(self.model_name)
+        pairs = [[query, doc.page_content] for doc in documents]
+        scores = model.predict(pairs)
         
-    Returns:
-        VectorStoreRetriever: LangChain retriever object.
-    """
+        scored_docs = list(zip(documents, scores))
+        scored_docs.sort(key=lambda x: x[1], reverse=True)
+        
+        return [doc for doc, score in scored_docs[:self.top_n]]
+
+def get_advanced_retriever(product_name: str, k: int = 40):
     collection_name = f"reddit_{product_name.replace(' ', '_').lower()}"
-    
     index_name = os.environ.get("PINECONE_INDEX_NAME")
-    if not index_name or not os.environ.get("PINECONE_API_KEY"):
-        print("Pinecone environment variables are missing.")
+    
+    if not index_name:
         return None
+        
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+    index = pc.Index(index_name)
+    
+    # 1. Load BM25 Sparse Encoder for Hybrid Search
+    bm25_path = f"bm25_models/bm25_{collection_name}.json"
+    bm25_encoder = BM25Encoder().default()
+    if os.path.exists(bm25_path):
+        bm25_encoder.load(bm25_path)
+    else:
+        print("Warning: BM25 encoder not found for this product. Hybrid search might be degraded.")
         
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
     
-    # Load existing Pinecone DB namespace
-    try:
-        vectorstore = PineconeVectorStore(
-            index_name=index_name,
-            embedding=embeddings,
-            namespace=collection_name
-        )
-        
-        # We use MMR (Maximal Marginal Relevance) to diversify results
-        # and ensure we aren't just fetching the exact same complaint 15 times
-        retriever = vectorstore.as_retriever(
-            search_type="mmr",
-            search_kwargs={
-                "k": k,
-                "fetch_k": k * 3  # Fetch more documents to then select diverse k
-            }
-        )
-        return retriever
-    except Exception as e:
-        print(f"Error loading Pinecone DB: {e}")
-        return None
-
-def retrieve_complaints(query: str, product_name: str, k: int = 15):
-    """
-    Retrieves the top-k relevant complaints for a given query and product.
+    # 2. Base Hybrid Retriever (Retrieves top 100 for re-ranking)
+    hybrid_retriever = PineconeHybridSearchRetriever(
+        embeddings=embeddings,
+        sparse_encoder=bm25_encoder,
+        index=index,
+        namespace=collection_name,
+        top_k=100
+    )
     
-    Args:
-        query (str): The user's query (e.g., 'What are the main bugs in Instagram?').
-        product_name (str): The target product.
-        k (int): Number of chunks to retrieve.
-        
-    Returns:
-        list[Document]: List of LangChain documents.
-    """
-    retriever = get_retriever(product_name, k)
+    # 3. Multi-Query Expansion
+    llm = ChatGroq(temperature=0, model_name="llama3-8b-8192")
+    multi_query_retriever = MultiQueryRetriever.from_llm(
+        retriever=hybrid_retriever,
+        llm=llm
+    )
+    
+    # 4. Cross-Encoder Re-Ranking
+    reranker = CustomCrossEncoderReranker(top_n=k)
+    
+    # 5. Final Compression Retriever
+    advanced_retriever = ContextualCompressionRetriever(
+        base_compressor=reranker,
+        base_retriever=multi_query_retriever
+    )
+    
+    return advanced_retriever
+
+def retrieve_complaints(query: str, product_name: str, k: int = 40):
+    retriever = get_advanced_retriever(product_name, k)
     if not retriever:
         return []
         
-    print(f"Retrieving top {k} complaints for query: '{query}'")
+    print(f"Retrieving top {k} complaints using Advanced RAG for query: '{query}'")
     docs = retriever.invoke(query)
     return docs
-
-if __name__ == "__main__":
-    # Test script
-    docs = retrieve_complaints("bugs and glitches", "Instagram")
-    for i, doc in enumerate(docs):
-        print(f"\n--- Result {i+1} ---")
-        print(f"Score/Upvotes: {doc.metadata.get('upvotes', 'N/A')}")
-        print(f"Text: {doc.page_content[:200]}...")

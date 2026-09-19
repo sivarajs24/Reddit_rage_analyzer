@@ -79,23 +79,51 @@ def create_vector_store(documents: list[Document], collection_name: str):
     # Generate deterministic IDs for chunks to prevent database bloat
     import hashlib
     doc_ids = []
+    texts = []
+    metadatas = []
     for chunk in chunked_documents:
-        # Create a unique MD5 hash based on the chunk content and its source URL
         hash_input = f"{chunk.metadata.get('url', '')}_{chunk.page_content}"
         chunk_id = hashlib.md5(hash_input.encode('utf-8')).hexdigest()
         doc_ids.append(chunk_id)
+        texts.append(chunk.page_content)
+        metadatas.append(chunk.metadata)
         
-    # Using PineconeVectorStore.from_documents initializes and adds documents
-    vectorstore = PineconeVectorStore.from_documents(
-        documents=chunked_documents,
-        embedding=embeddings,
-        index_name=index_name,
-        namespace=collection_name,
-        ids=doc_ids
+    print("Training BM25 Sparse Encoder for Hybrid Search...")
+    from pinecone_text.sparse import BM25Encoder
+    from langchain_community.retrievers import PineconeHybridSearchRetriever
+    import nltk
+    
+    # Download NLTK data required by BM25Encoder (punkt, stopwords)
+    try:
+        nltk.download('punkt_tab', quiet=True)
+    except:
+        pass
+    
+    bm25_encoder = BM25Encoder().default()
+    bm25_encoder.fit(texts)
+    
+    # Save the fitted encoder so the retriever can use it later
+    os.makedirs("bm25_models", exist_ok=True)
+    bm25_path = f"bm25_models/bm25_{collection_name}.json"
+    bm25_encoder.dump(bm25_path)
+    
+    print("Uploading Hybrid Vectors (Dense + Sparse) to Pinecone...")
+    retriever = PineconeHybridSearchRetriever(
+        embeddings=embeddings,
+        sparse_encoder=bm25_encoder,
+        index=index,
+        namespace=collection_name
     )
     
-    print("Embeddings successfully stored in Pinecone.")
-    return vectorstore
+    retriever.add_texts(
+        texts=texts,
+        metadatas=metadatas,
+        ids=doc_ids,
+        namespace=collection_name
+    )
+    
+    print("Hybrid Embeddings successfully stored in Pinecone.")
+    return retriever
 
 def process_product(raw_data: list, product_name: str):
     """End-to-end embedding pipeline for a product."""
