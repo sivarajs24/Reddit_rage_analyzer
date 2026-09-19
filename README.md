@@ -1,72 +1,84 @@
-# 🤬 Reddit Rage Analyzer - Comprehensive Project Documentation
+# Reddit Rage Analyzer - Advanced RAG Edition
 
 ## 1. Problem Statement
-In today's highly competitive digital market, user feedback is gold. However, a significant portion of honest, unfiltered feedback is scattered across forums like Reddit, buried in unstructured text, complaint threads, and rants. Manually sifting through thousands of Reddit posts to identify common bugs, missing features, and overall sentiment for a specific product is incredibly time-consuming and prone to human bias. 
+In today's competitive digital market, user feedback is gold. However, a significant portion of honest, unfiltered feedback is scattered across Reddit—buried in unstructured text, complaint threads, and rants. Manually sifting through thousands of Reddit posts to identify common bugs, missing features, and overall sentiment for a specific product is incredibly time-consuming and prone to human bias. 
 
-Companies and product managers need an automated, intelligent system that can instantly scrape this unstructured feedback, understand the context, and extract actionable insights—such as top bugs, hated features, and emotional intensity—without requiring manual review.
+This project provides an automated, enterprise-grade AI system that instantly scrapes unstructured Reddit feedback, understands the context via a state-of-the-art Hybrid RAG pipeline, and extracts actionable insights (top bugs, hated features, emotional intensity) without requiring manual review.
 
 ## 2. Complete Workflow
-The project implements an end-to-end Retrieval-Augmented Generation (RAG) pipeline combined with data scraping and AI summarization. The workflow is divided into the following sequential steps:
+The project implements a cutting-edge Retrieval-Augmented Generation (RAG) pipeline combined with headless browser scraping and asynchronous AI summarization.
 
-### Phase 1: Data Acquisition (Scraping)
-*   **User Input:** The user enters a product name (e.g., "Instagram", "Dell laptop") and optional target subreddits in the Streamlit UI.
-*   **RSS Scraping:** The `scraper.py` script bypasses Reddit's strict API rate limits and 403 blocks by hitting Reddit's public RSS search feeds instead of the JSON API.
-*   **Parsing & Deduplication:** It parses the XML responses, cleans the basic HTML out of the text, and deduplicates posts based on URLs. The raw data is saved locally as a JSON file in the `data/` directory.
+### Phase 1: Data Acquisition (Apify Scraping)
+*   **User Input:** The user enters a product name (e.g., "Instagram", "Dell laptop") in the Glassmorphism Web UI.
+*   **Headless Scraping:** The `embedder.py` script utilizes the `Apify` API (`automation-lab/reddit-scraper`) to bypass Reddit's strict API rate limits and 403 blocks. It scrapes top posts and comments related to the product query.
+*   **Deduplication:** Posts are deterministically hashed (MD5) based on URL and content to prevent database bloat before vectorization.
 
-### Phase 2: Data Processing & Embedding
-*   **Text Cleaning:** The `embedder.py` script loads the scraped JSON data and cleans the text to remove noise.
-*   **Chunking:** It uses LangChain's `RecursiveCharacterTextSplitter` to chunk the text into manageable pieces (1000 characters with 150-character overlap) to preserve context.
-*   **Vectorization:** These chunks are transformed into high-dimensional vector embeddings using the `sentence-transformers/all-MiniLM-L6-v2` model from HuggingFace.
-*   **Storage:** The embeddings and their corresponding metadata are stored in a local ChromaDB vector database.
+### Phase 2: Hybrid Data Processing & Embedding
+*   **Chunking:** LangChain's `RecursiveCharacterTextSplitter` chunks the text into manageable pieces to preserve context.
+*   **Dense Vectors:** Chunks are transformed into high-dimensional semantic vectors using the `sentence-transformers/all-MiniLM-L6-v2` HuggingFace model.
+*   **Sparse Vectors (BM25):** The system dynamically trains a `BM25Encoder` (via `pinecone-text`) on the scraped corpus to generate exact-keyword sparse vectors, saving the model locally.
+*   **Storage:** The Hybrid Embeddings (Dense + Sparse) are uploaded to a Serverless **Pinecone** vector database using the `dotproduct` metric.
 
-### Phase 3: Semantic Retrieval (RAG)
-*   **Querying:** When the system needs to analyze complaints, `rag_pipeline.py` creates a retriever connected to the ChromaDB.
-*   **Relevance & Diversity:** It uses a hardcoded search query ("major issues bugs hate worst features") to semantically search the vector database for the most relevant negative feedback. It utilizes Maximal Marginal Relevance (MMR) to ensure that the retrieved complaints are both relevant to the query and diverse, preventing the AI from analyzing the exact same complaint multiple times.
+### Phase 3: Advanced Semantic Retrieval (RAG Pipeline)
+When analyzing complaints or answering chat questions, `rag_pipeline.py` executes a multi-stage retrieval process:
+1.  **Multi-Query Expansion:** An LLM (`llama3-8b-8192` via Groq) takes the user's query and generates 3 alternative variations to ensure no edge-case complaints are missed.
+2.  **Hybrid Search:** The system queries Pinecone using both semantic meaning (Dense) and exact keyword matches (Sparse) for all 3 generated queries, pulling a massive net of 100 relevant documents.
+3.  **Cross-Encoder Re-Ranking:** A `CustomCrossEncoderReranker` runs the 100 documents through a heavy-duty `cross-encoder/ms-marco-MiniLM-L-6-v2` neural network to strictly re-score and filter them down to the true Top 40 most relevant documents.
 
-### Phase 4: AI Analysis & Generation
-*   **Prompt Construction:** The retrieved text chunks are compiled into a single context block and passed to `analyzer.py`.
-*   **LLM Inference:** A prompt is constructed instructing an LLM (LLaMA 3.3 70B via Groq) to act as a product analyst.
-*   **Structured Output:** The LLM reads the context and returns a strictly formatted JSON response (enforced via Pydantic) containing the most hated features, common bugs, sentiment, emotional intensity, a summary, and top keywords.
+### Phase 4: AI Analysis & Map-Reduce
+*   **Map-Reduce Chain:** Because the Top 40 documents exceed standard LLM token limits, `analyzer.py` utilizes a Map-Reduce summarization chain to process the chunks in batches without crashing.
+*   **Structured Output:** The Groq LLM (LLaMA 3.3 70B) reads the context and returns a strictly formatted JSON response containing the most hated features, common bugs, sentiment, emotional intensity, and a summary.
 
 ### Phase 5: Interactive Visualization (UI)
-*   **Dashboard:** The frontend (`app.py`), built with Streamlit, takes the structured JSON response and renders an interactive "Executive Dashboard".
-*   **Visuals:** It displays a word cloud, sentiment pie charts (via Plotly), metrics, and deep-dive lists of bugs.
-*   **Conversational AI:** Additionally, it provides an interactive chat interface where users can ask follow-up questions to the LLM, which answers strictly based on the context of the scraped Reddit data.
+*   **Dashboard:** The frontend (`index.html`/`script.js`), built with Vanilla JS, CSS, and HTML, features a stunning, animated **Glassmorphism** dark-mode UI.
+*   **Visuals:** It dynamically renders custom charts (using Chart.js), metrics, and deep-dive lists of bugs.
+*   **Conversational AI:** Provides an interactive chat interface where users can ask follow-up questions to the LLM, strictly grounded in the scraped Reddit data context.
 
-## 3. Architecture
-The system architecture follows a classic modular RAG design:
+## 3. Architecture & Tech Stack
 
-*   **Frontend Layer (`app.py`):** Streamlit application. Handles user inputs, triggers backend processes, and renders visual analytics (Plotly, WordCloud) and chat interfaces.
-*   **Data Ingestion Layer (`scraper.py`):** An RSS-based scraper that extracts raw XML from Reddit, parses it, and stores it in the local filesystem (`data/` folder).
-*   **Vector & Embedding Layer (`embedder.py`):** Utilizes LangChain to manage the transformation of text into vectors. Uses HuggingFace embeddings and interacts directly with the local vector store.
-*   **Retrieval Layer (`rag_pipeline.py`):** Connects to ChromaDB and performs MMR-based semantic similarity searches.
-*   **LLM / Inference Layer (`analyzer.py` & `app.py` chat):** Communicates with the Groq API to access the blazing-fast LLaMA 3.3 70B model for both structured data extraction (JSON) and conversational Q&A.
+*   **Frontend:** HTML5, CSS3 (Glassmorphism, animations), Vanilla JavaScript, Chart.js.
+*   **Backend:** FastAPI (Asynchronous, non-blocking I/O via Uvicorn).
+*   **Data Ingestion:** Apify Client (`automation-lab/reddit-scraper`).
+*   **Vector Database:** Pinecone (Serverless, dotproduct metric for Hybrid Search).
+*   **Embedding Models:** HuggingFace `all-MiniLM-L6-v2` (Dense) & `pinecone-text` BM25 (Sparse).
+*   **Reranking Model:** HuggingFace `cross-encoder/ms-marco-MiniLM-L-6-v2`.
+*   **LLM / Inference:** Groq API (LLaMA 3-8B for routing/expansion, LLaMA 3.3 70B for analysis).
+*   **Orchestration:** LangChain (MultiQueryRetriever, ContextualCompressionRetriever, Map-Reduce Chains).
 
-## 4. Tools Used & Why
+## 4. Local Setup & Installation
 
-1.  **Streamlit:** 
-    *   *Why:* Used for the frontend interface. Streamlit allows for rapid prototyping and building data-driven web applications purely in Python. It natively supports data visualization libraries and makes creating chat interfaces easy.
-2.  **LangChain:**
-    *   *Why:* Acts as the orchestration framework for the RAG pipeline. It provides standardized wrappers for document loading, text splitting (`RecursiveCharacterTextSplitter`), and integrating with vector stores and embedding models.
-3.  **HuggingFace Embeddings (`sentence-transformers/all-MiniLM-L6-v2`):**
-    *   *Why:* Used to convert text into numerical vectors. This specific model is chosen because it is highly efficient, runs quickly on local hardware without requiring a GPU, and provides excellent semantic representations for general text.
-4.  **Groq API & LLaMA 3.3 70B Versatile:**
-    *   *Why:* Groq provides ultra-fast inference speeds through its LPU technology. LLaMA 3.3 70B is an incredibly capable open-weight model that excels at instruction following and strict JSON output generation. The speed is crucial for providing a responsive user experience. *(Note: The original app used Gemini, but has been migrated to Groq/LLaMA for speed and reliability in JSON generation)*.
-5.  **Pydantic:**
-    *   *Why:* Used in `analyzer.py` to define the `AnalysisResult` data schema. It ensures that the JSON generated by the LLM strictly adheres to the required format (e.g., lists of strings, specific sentiment categories), preventing frontend crashes.
-6.  **Plotly, WordCloud & Matplotlib:**
-    *   *Why:* Used for data visualization. Plotly provides interactive, aesthetically pleasing charts (like the sentiment donut chart), while WordCloud creates visual summaries of the most frequently used terms.
-7.  **Python `xml.etree.ElementTree` & `requests` (Custom RSS Scraper):**
-    *   *Why:* Reddit heavily restricted its official API and blocks automated JSON requests (403 Forbidden). By scraping the legacy RSS feeds, the application bypasses these restrictions to gather data reliably without needing OAuth tokens.
+### Prerequisites
+1. Python 3.10+
+2. API Keys for: **Groq**, **Pinecone**, and **Apify**.
 
-## 5. Database Used
-The project utilizes **ChromaDB** (specifically, the local open-source version) as its primary vector database.
-
-*   **Why ChromaDB:** 
-    *   **Local Persistence:** It runs embedded within the Python application and saves its data to the local disk (`chroma_db/` directory). This eliminates the need to set up, host, or pay for a separate cloud database service.
-    *   **LangChain Integration:** It has seamless out-of-the-box integration with LangChain.
-    *   **Performance:** It is highly optimized for the relatively small-to-medium scale of data scraped per product, allowing for sub-second semantic searches.
-*   **Data Stored:** ChromaDB stores the chunked text of the Reddit posts, the high-dimensional vector embeddings of those chunks, and associated metadata (such as the original URL, subreddit, and upvote count) so it can be referenced later in the UI.
-
-## 6. Conclusion
-The Reddit Rage Analyzer successfully bridges the gap between unstructured social media complaints and structured, actionable product intelligence. By combining a resilient RSS scraping technique with a state-of-the-art Retrieval-Augmented Generation pipeline, the application can distill thousands of angry comments into clear bug reports, feature requests, and sentiment metrics in seconds. The use of local vector storage (ChromaDB) and high-speed LLM inference (Groq + LLaMA 3.3) ensures that the architecture is both cost-effective and highly responsive. Ultimately, this tool empowers product teams to make data-driven decisions based on what their users truly care about, transforming public "rage" into constructive engineering tasks.
+### Installation Steps
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/sivarajs24/Reddit_rage_analyzer.git
+   cd Reddit_rage_analyzer
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   # Windows
+   venv\Scripts\activate
+   # Mac/Linux
+   source venv/bin/activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Configure Environment Variables:
+   Create a `.env` file in the root directory and add your API keys:
+   ```env
+   GROQ_API_KEY=your_groq_key
+   PINECONE_API_KEY=your_pinecone_key
+   PINECONE_INDEX_NAME=your_index_name (MUST be created with 'dotproduct' metric)
+   APIFY_API_TOKEN=your_apify_key
+   ```
+5. Run the Application:
+   ```bash
+   uvicorn api:app --reload
+   ```
+6. Open your browser and navigate to `http://127.0.0.1:8000`.
