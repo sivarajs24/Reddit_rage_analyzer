@@ -1,218 +1,244 @@
 import streamlit as st
 
-
-def apply_glassmorphism():
-    """Injects the premium visual system used by the dashboard."""
+def apply_y2k_theme():
+    """Injects the Y2K / Retro Pixel Art visual system."""
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=VT323&display=swap');
 
         :root {
-            --page-bg: #020617;
-            --page-bg-2: #0f172a;
-            --glass-bg: rgba(15, 23, 42, 0.68);
-            --glass-border: rgba(148, 163, 184, 0.18);
-            --glass-shadow: 0 24px 80px rgba(2, 6, 23, 0.42);
-            --accent: #38bdf8;
-            --accent-strong: #0ea5e9;
-            --accent-soft: rgba(56, 189, 248, 0.16);
-            --text-main: #e2e8f0;
-            --text-soft: #94a3b8;
+            --bg-color: #d1d5db; /* Light grey retro OS background */
+            --window-bg: #f3f4f6; /* White/grey window background */
+            --border-color: #000000;
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --hot-pink: #ff00ff;
+            --neon-cyan: #00ffff;
+            --lime-green: #00ff00;
+            --box-shadow: 4px 4px 0px #000000;
         }
 
         html, body, [class*="css"] {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Space Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
         }
 
         .stApp {
-            background:
-                radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 32%),
-                radial-gradient(circle at top right, rgba(99, 102, 241, 0.16), transparent 28%),
-                linear-gradient(180deg, #020617 0%, #081120 55%, #020617 100%);
-            color: var(--text-main);
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(45deg, #cbd5e1 25%, transparent 25%, transparent 75%, #cbd5e1 75%, #cbd5e1),
+                linear-gradient(45deg, #cbd5e1 25%, transparent 25%, transparent 75%, #cbd5e1 75%, #cbd5e1);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
         }
 
         .block-container {
-            max-width: 1280px;
+            max-width: 1200px;
             padding-top: 2rem;
-            padding-bottom: 3rem;
+            padding-bottom: 4rem;
         }
 
-        #MainMenu,
-        footer,
-        header {
+        #MainMenu, footer, header {
             visibility: hidden;
         }
 
         h1, h2, h3, h4, h5, h6 {
-            font-family: 'Outfit', 'Inter', sans-serif;
-            letter-spacing: -0.03em;
-            color: var(--text-main);
+            font-family: 'VT323', monospace;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            text-shadow: 2px 2px 0px var(--hot-pink);
+            letter-spacing: 2px;
         }
 
         p, li, label, span, div {
-            color: var(--text-main);
+            color: var(--text-primary);
         }
 
+        /* Hero Section */
         .hero-shell {
             text-align: center;
-            margin-bottom: 1.25rem;
+            margin-bottom: 4rem;
+            background: var(--window-bg);
+            border: 3px solid var(--border-color);
+            box-shadow: var(--box-shadow);
+            padding: 3rem 2rem;
         }
 
         .hero-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.45rem 0.85rem;
-            border-radius: 999px;
-            border: 1px solid rgba(56, 189, 248, 0.24);
-            background: rgba(15, 23, 42, 0.55);
-            color: var(--accent);
-            font-size: 0.78rem;
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            background: var(--hot-pink);
+            color: #fff;
+            border: 2px solid var(--border-color);
+            font-size: 0.9rem;
             font-weight: 700;
-            letter-spacing: 0.08em;
             text-transform: uppercase;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 2px 2px 0px #000;
         }
 
         .hero-title {
-            font-size: clamp(2.6rem, 5vw, 4.9rem);
-            line-height: 0.96;
-            margin: 0;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 35%, #38bdf8 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            font-size: clamp(3rem, 7vw, 6rem);
+            line-height: 1;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            font-family: 'VT323', monospace;
+            text-shadow: 4px 4px 0px var(--neon-cyan);
+            letter-spacing: 2px;
         }
 
         .hero-copy {
-            max-width: 760px;
-            margin: 0 auto 1.5rem auto;
-            color: var(--text-soft);
-            font-size: 1.03rem;
-            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto 2rem auto;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.5;
+            font-weight: 700;
         }
 
         .soft-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            padding: 0.45rem 0.8rem;
-            margin: 0.25rem 0.35rem 0 0;
-            border-radius: 999px;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            color: var(--text-soft);
-            font-size: 0.84rem;
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            margin: 0.25rem;
+            background: var(--lime-green);
+            border: 2px solid var(--border-color);
+            color: #000;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 2px 2px 0px #000;
         }
 
-        [data-testid="stForm"] {
-            background: rgba(15, 23, 42, 0.55);
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 28px;
-            padding: 1.15rem 1.15rem 0.9rem 1.15rem;
-            box-shadow: var(--glass-shadow);
-            backdrop-filter: blur(16px);
-        }
-
+        /* Forms & Containers */
+        [data-testid="stForm"],
         [data-testid="stVerticalBlockBorderWrapper"] {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: var(--glass-shadow);
-            backdrop-filter: blur(18px);
+            background: var(--window-bg) !important;
+            border: 3px solid var(--border-color) !important;
+            border-radius: 0px !important;
+            padding: 2rem;
+            box-shadow: var(--box-shadow) !important;
         }
 
+        /* Metrics */
         [data-testid="stMetric"] {
-            background: rgba(15, 23, 42, 0.72);
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 20px;
-            padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 16px 40px rgba(2, 6, 23, 0.26);
+            background: #ffffff;
+            border: 3px solid var(--border-color);
+            border-radius: 0px;
+            padding: 1rem;
+            box-shadow: var(--box-shadow);
         }
 
         [data-testid="stMetricLabel"] {
-            color: var(--text-soft) !important;
-            font-size: 0.85rem;
+            color: var(--text-primary) !important;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.2rem;
+            margin-bottom: 0.5rem;
         }
 
         [data-testid="stMetricValue"] {
-            color: var(--text-main) !important;
-            font-family: 'Outfit', sans-serif;
+            color: var(--hot-pink) !important;
+            font-family: 'VT323', monospace;
+            font-size: 3rem;
+            text-shadow: 2px 2px 0px var(--neon-cyan);
         }
 
-        [data-baseweb="input"] {
-            background: rgba(2, 6, 23, 0.42) !important;
-            border-radius: 16px !important;
-        }
-
-        input, textarea {
-            background: rgba(2, 6, 23, 0.42) !important;
-            color: var(--text-main) !important;
-            border-color: rgba(148, 163, 184, 0.2) !important;
+        /* Inputs */
+        input, textarea, [data-baseweb="input"] {
+            background: #ffffff !important;
+            color: var(--text-primary) !important;
+            border: 2px solid var(--border-color) !important;
+            border-radius: 0px !important;
+            font-family: 'Space Mono', monospace !important;
+            font-weight: 700 !important;
         }
 
         input:focus, textarea:focus {
-            border-color: rgba(56, 189, 248, 0.55) !important;
-            box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4) !important;
+            outline: none !important;
+            background: var(--neon-cyan) !important;
         }
 
+        /* Buttons */
         button[kind="primary"],
         button[data-testid="baseButton-primary"] {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%) !important;
-            color: #020617 !important;
-            border: 0 !important;
-            border-radius: 999px !important;
-            font-weight: 700 !important;
-            box-shadow: 0 18px 40px rgba(14, 165, 233, 0.32) !important;
+            background: var(--hot-pink) !important;
+            color: #ffffff !important;
+            border: 3px solid var(--border-color) !important;
+            border-radius: 0px !important;
+            font-family: 'VT323', monospace !important;
+            font-size: 1.5rem !important;
+            padding: 0.2rem 1.5rem !important;
+            box-shadow: var(--box-shadow) !important;
+            transition: all 0.1s;
         }
 
         button[kind="primary"]:hover,
         button[data-testid="baseButton-primary"]:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 22px 44px rgba(14, 165, 233, 0.42) !important;
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000 !important;
+            background: var(--neon-cyan) !important;
+            color: #000 !important;
         }
 
         button[kind="secondary"] {
-            background: rgba(15, 23, 42, 0.85) !important;
-            color: var(--text-main) !important;
-            border: 1px solid rgba(148, 163, 184, 0.18) !important;
-            border-radius: 999px !important;
+            background: #ffffff !important;
+            color: var(--text-primary) !important;
+            border: 3px solid var(--border-color) !important;
+            border-radius: 0px !important;
+            font-family: 'Space Mono', monospace !important;
+            font-weight: 700 !important;
+            box-shadow: var(--box-shadow) !important;
+            transition: all 0.1s;
         }
 
+        button[kind="secondary"]:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000 !important;
+            background: var(--lime-green) !important;
+        }
+
+        /* Tabs */
         div[data-baseweb="tab-list"] {
-            gap: 0.6rem;
-            background: rgba(15, 23, 42, 0.42);
-            padding: 0.35rem;
-            border-radius: 999px;
-            border: 1px solid rgba(148, 163, 184, 0.14);
+            gap: 0.5rem;
+            background: transparent;
+            border-bottom: 3px solid var(--border-color);
         }
 
         button[data-baseweb="tab"] {
-            border-radius: 999px !important;
-            color: var(--text-soft) !important;
-            background: transparent !important;
+            border: 3px solid var(--border-color) !important;
+            border-bottom: 0 !important;
+            border-radius: 0px !important;
+            background: #cbd5e1 !important;
+            color: #000 !important;
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem !important;
+            padding: 0.2rem 1rem !important;
         }
 
         button[data-baseweb="tab"][aria-selected="true"] {
-            background: rgba(56, 189, 248, 0.18) !important;
-            color: var(--text-main) !important;
+            background: var(--window-bg) !important;
+            margin-bottom: -3px !important;
+            border-bottom: 3px solid var(--window-bg) !important;
         }
 
+        /* Expanders & Chat */
         div[data-testid="stExpander"] {
-            background: rgba(15, 23, 42, 0.65) !important;
-            border: 1px solid rgba(148, 163, 184, 0.14) !important;
-            border-radius: 18px !important;
-            box-shadow: none !important;
+            background: #ffffff !important;
+            border: 3px solid var(--border-color) !important;
+            border-radius: 0px !important;
+            box-shadow: var(--box-shadow) !important;
+            margin-bottom: 1rem !important;
         }
 
         div[data-testid="stChatMessage"] {
-            background: rgba(15, 23, 42, 0.56);
-            border: 1px solid rgba(148, 163, 184, 0.12);
-            border-radius: 20px;
-            padding: 0.25rem 0.25rem 0.25rem 0.25rem;
+            background: #ffffff;
+            border: 3px solid var(--border-color);
+            border-radius: 0px;
+            padding: 1rem;
+            box-shadow: 3px 3px 0px #000;
         }
 
         div[data-testid="stDownloadButton"] button {
@@ -220,7 +246,10 @@ def apply_glassmorphism():
         }
 
         hr {
-            border-color: rgba(148, 163, 184, 0.16);
+            border-color: var(--border-color);
+            border-width: 3px;
+            border-style: dashed;
+            margin: 3rem 0;
         }
         </style>
         """,

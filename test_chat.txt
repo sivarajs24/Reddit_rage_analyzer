@@ -1,0 +1,2 @@
+Status: 200
+{"response":"The documents point to a single, clear issue: **student performance is falling.**  \nDocument 2 explicitly states that “Student scores in high‑income countries hit a low point, test shows,” indicating that the primary problem being complained about is a significant decline in test scores (i.e., academic achievement) among students in wealthier nations."}

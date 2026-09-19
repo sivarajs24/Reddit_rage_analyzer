@@ -1,96 +1,83 @@
 import os
-import json
-import requests
-import time
-import re
-import xml.etree.ElementTree as ET
+from apify_client import ApifyClient
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def scrape_reddit(product_name: str, limit_per_sub: int = 50, custom_subreddits: list = None):
     """
-    Scrapes Reddit data by hitting the public RSS search feeds.
-    Bypasses Reddit's 403 blocks on JSON endpoints.
+    Scrapes Reddit data using Apify's Reddit Scraper.
+    Gets top posts and their deep comments.
     """
-    collected_data = []
+    token = os.environ.get('APIFY_API_TOKEN')
+    if not token:
+        print("Error: APIFY_API_TOKEN is missing in .env")
+        return []
+
+    client = ApifyClient(token)
     
-    # Custom subreddits fallback - remove tech-bias by default
-    # "all" is a special keyword we'll use for global search
-    target_subs = custom_subreddits if custom_subreddits else ["all"]
-    
-    # Heuristic: Add the product name itself as a guessed official subreddit
-    guessed_sub = product_name.lower().replace(" ", "")
-    if guessed_sub not in target_subs and not custom_subreddits:
-        target_subs.insert(0, guessed_sub)
+    # We will just do a general search if custom_subreddits isn't provided.
+    search_queries = [product_name]
+    if custom_subreddits:
+        # Apify actor search supports standard reddit search syntax
+        search_queries = [f"{product_name} subreddit:{sub}" for sub in custom_subreddits]
         
-    print(f"Scraping Reddit RSS for '{product_name}' in subreddits: {', '.join(target_subs)}...")
+    print(f"Starting Apify scraper for queries: {search_queries}")
     
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    run_input = {
+        "searchQueries": search_queries,
+        "type": "post",
+        "sort": "relevance",
+        "time": "month",
+        "maxPostsPerSource": limit_per_sub,
+        "includeComments": True,
+        "maxCommentsPerPost": 5
     }
 
-    query = re.sub(r'[^a-zA-Z0-9 ]', '', product_name).replace(" ", "%20")
-    
-    for sub_name in target_subs:
-        try:
-            # If "all" is specified, do a global search across all of Reddit
-            if sub_name == "all":
-                url = f"https://www.reddit.com/search.rss?q={query}&sort=relevance&limit=100"
-            else:
-                url = f"https://www.reddit.com/r/{sub_name}/search.rss?q={query}&restrict_sr=1&limit=100"
+    try:
+        # Using a reliable, free-to-call actor for Reddit
+        run = client.actor("automation-lab/reddit-scraper").call(run_input=run_input)
+        
+        collected_data = []
+        dataset_items = client.dataset(run["defaultDatasetId"]).iterate_items()
+        
+        for index, item in enumerate(dataset_items):
+            # Combine the post body with its top comments
+            body_text = item.get('text', '') or item.get('body', '') or ''
             
-            # Simple retry loop
-            for attempt in range(2):
-                response = requests.get(url, headers=headers)
+            comments_text = ""
+            for comment in item.get('comments', []):
+                text = comment.get('text', '') or comment.get('body', '')
+                if text:
+                    comments_text += f"\n[Comment]: {text}"
+            
+            full_content = body_text + "\n" + comments_text
+            
+            mapped_item = {
+                "id": item.get('id', f"apify_{index}"),
+                "type": "post",
+                "title": item.get('title', ''),
+                "body": full_content.strip(),
+                "upvotes": item.get('upvotes', 0),
+                "subreddit": item.get('subreddit', 'all'),
+                "timestamp": 0,
+                "datetime": item.get('createdAt', ''),
+                "url": item.get('url', '')
+            }
+            
+            if mapped_item["title"] or mapped_item["body"]:
+                collected_data.append(mapped_item)
                 
-                if response.status_code == 200:
-                    root = ET.fromstring(response.content)
-                    ns = {'atom': 'http://www.w3.org/2005/Atom'}
-                    entries = root.findall('atom:entry', ns)
-                    
-                    for index, entry in enumerate(entries[:limit_per_sub]):
-                        title = entry.find('atom:title', ns).text if entry.find('atom:title', ns) is not None else ""
-                        content = entry.find('atom:content', ns).text if entry.find('atom:content', ns) is not None else ""
-                        link = entry.find('atom:link', ns).attrib.get('href', '') if entry.find('atom:link', ns) is not None else ""
-                        updated = entry.find('atom:updated', ns).text if entry.find('atom:updated', ns) is not None else ""
-                        
-                        # Try to clean HTML from RSS content slightly
-                        content = re.sub(r'<[^>]+>', ' ', content)
-                        
-                        item = {
-                            "id": f"{sub_name}_{index}",
-                            "type": "post",
-                            "title": title,
-                            "body": content,
-                            "upvotes": 0, # RSS doesn't provide upvotes
-                            "subreddit": sub_name,
-                            "timestamp": 0,
-                            "datetime": updated,
-                            "url": link
-                        }
-                        collected_data.append(item)
-                    break # Success, exit retry loop
-                elif response.status_code == 429:
-                    print(f"Rate limited (429) on r/{sub_name}. Waiting 5 seconds...")
-                    time.sleep(5.0)
-                elif response.status_code == 404:
-                    print(f"Subreddit r/{sub_name} not found. Skipping.")
-                    break
-                else:
-                    print(f"Error fetching from {url}: Status Code {response.status_code}")
-                    break
-                    
-            time.sleep(3.0) # Avoid rate limiting for the next subreddit
-                
-        except Exception as e:
-            print(f"Error scraping {sub_name}: {e}")
+        print(f"Apify Scraper finished. Retrieved {len(collected_data)} items (with comments included).")
+        return collected_data
 
-    # Deduplicate by URL
-    unique_data = {item['url']: item for item in collected_data if item['url']}.values()
-    final_data = list(unique_data)
-
-    print(f"Scraped {len(final_data)} items.")
-    return final_data
+    except Exception as e:
+        print(f"Apify Scraping Error: {e}")
+        return []
 
 if __name__ == "__main__":
-    sample_data = scrape_reddit("Instagram", limit_per_sub=5)
-    print(f"Sample data gathered: {len(sample_data)} records.")
+    data = scrape_reddit("OpenAI", limit_per_sub=5)
+    print(f"Scraped {len(data)} items")
+    for d in data:
+        print(f"Title: {d['title']}")
+        print(f"Body length: {len(d['body'])} chars\n")

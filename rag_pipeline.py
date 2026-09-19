@@ -1,10 +1,9 @@
 import os
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_pinecone import PineconeVectorStore
 
 # Configuration must match embedder.py
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-PERSIST_DIRECTORY = "chroma_db"
 
 def get_retriever(product_name: str, k: int = 15):
     """
@@ -19,18 +18,19 @@ def get_retriever(product_name: str, k: int = 15):
     """
     collection_name = f"reddit_{product_name.replace(' ', '_').lower()}"
     
-    if not os.path.exists(PERSIST_DIRECTORY):
-        print(f"Vector store directory {PERSIST_DIRECTORY} does not exist.")
+    index_name = os.environ.get("PINECONE_INDEX_NAME")
+    if not index_name or not os.environ.get("PINECONE_API_KEY"):
+        print("Pinecone environment variables are missing.")
         return None
         
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
     
-    # Load existing Chroma DB
+    # Load existing Pinecone DB namespace
     try:
-        vectorstore = Chroma(
-            persist_directory=PERSIST_DIRECTORY,
-            embedding_function=embeddings,
-            collection_name=collection_name
+        vectorstore = PineconeVectorStore(
+            index_name=index_name,
+            embedding=embeddings,
+            namespace=collection_name
         )
         
         # We use MMR (Maximal Marginal Relevance) to diversify results
@@ -44,7 +44,7 @@ def get_retriever(product_name: str, k: int = 15):
         )
         return retriever
     except Exception as e:
-        print(f"Error loading Chroma DB: {e}")
+        print(f"Error loading Pinecone DB: {e}")
         return None
 
 def retrieve_complaints(query: str, product_name: str, k: int = 15):

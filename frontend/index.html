@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Rage Analyzer — See What Users Really Think</title>
+    <meta name="description" content="Analyze Reddit sentiment instantly. Find out what users love, hate, and complain about any product using AI.">
+    <link rel="stylesheet" href="/style.css?v=10">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Scanline Overlay -->
+    <div class="scanline-overlay"></div>
+
+    <!-- Ambient Glow Background -->
+    <div class="ambient-glow ambient-glow--cyan"></div>
+    <div class="ambient-glow ambient-glow--magenta"></div>
+
+    <div class="dashboard-wrapper">
+
+        <!-- Hero Header -->
+        <header class="hero">
+            <div class="hero__badge">READY TO ANALYZE <span class="pulse-dot"></span></div>
+            <h1 class="glitch-text" data-text="RAGE//ANALYZER">RAGE//ANALYZER</h1>
+            <p class="hero__sub">Find out what Reddit really thinks · AI-powered sentiment analysis · Instant insights from real conversations</p>
+        </header>
+
+        <!-- Main Bento Grid -->
+        <main class="bento-grid">
+
+            <!-- Control Panel -->
+            <div class="glass-card control-panel" data-corner="top-left">
+                <div class="card-header">
+                    <span class="card-header__icon">⌘</span>
+                    <h2>SEARCH SETTINGS</h2>
+                </div>
+                <form id="analysis-form">
+                    <div class="input-group">
+                        <label for="product">PRODUCT NAME</label>
+                        <div class="cyber-input-wrapper">
+                            <span class="cyber-input-prefix">›</span>
+                            <input type="text" id="product" placeholder="What product do you want to analyze?" required autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="subreddits">SUBREDDITS <span class="label-optional">[optional]</span></label>
+                        <div class="cyber-input-wrapper">
+                            <span class="cyber-input-prefix">›</span>
+                            <input type="text" id="subreddits" placeholder="e.g. technology, programming" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="focus-mode">ANALYSIS MODE <span class="label-optional">[optional]</span></label>
+                        <div class="cyber-select-wrapper">
+                            <select id="focus-mode" class="cyber-select">
+                                <option value="negative">🚨 Rage Mode (Bugs, Hate, Issues)</option>
+                                <option value="positive">✨ Praise Mode (Love, Best Features, Positive)</option>
+                                <option value="general">📊 General Overview (Opinions, Reviews, Feedback)</option>
+                                <option value="custom">✍️ Custom Topic...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group hidden" id="custom-focus-group">
+                        <label for="focus">CUSTOM TOPIC</label>
+                        <div class="cyber-input-wrapper">
+                            <span class="cyber-input-prefix">›</span>
+                            <input type="text" id="focus" placeholder="e.g. pricing model, customer support" autocomplete="off">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-cyber" id="analyze-btn">
+                        <span class="btn-cyber__text">ANALYZE NOW</span>
+                        <span class="btn-cyber__icon">▶</span>
+                    </button>
+                </form>
+                <div id="loading-indicator" class="hidden">
+                    <div class="cyber-loader">
+                        <div class="cyber-loader__bar"></div>
+                    </div>
+                    <p class="loading-text">Scanning Reddit posts<span class="loading-dots"></span></p>
+                </div>
+            </div>
+
+            <!-- System Metrics -->
+            <div class="glass-card metrics" id="metrics-box" data-corner="top-right">
+                <div class="card-header">
+                    <span class="card-header__icon">◈</span>
+                    <h2>KEY RESULTS</h2>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">OVERALL MOOD</div>
+                        <div class="metric-val neon-cyan" id="metric-sentiment">—</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">HOW STRONG</div>
+                        <div class="metric-val neon-magenta" id="metric-intensity">—</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">POSTS ANALYZED</div>
+                        <div class="metric-val neon-green" id="metric-count">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Summary -->
+            <div class="glass-card summary" data-corner="bottom-left">
+                <div class="card-header">
+                    <span class="card-header__icon">⟁</span>
+                    <h2>AI SUMMARY</h2>
+                </div>
+                <div id="ai-summary" class="summary-text">
+                    <p class="placeholder-text">Enter a product name above to get an AI-generated summary of what Reddit thinks.</p>
+                </div>
+            </div>
+
+            <!-- Keywords -->
+            <div class="glass-card wordcloud" data-corner="bottom-right">
+                <div class="card-header">
+                    <span class="card-header__icon">⊞</span>
+                    <h2>TRENDING KEYWORDS</h2>
+                </div>
+                <div id="keywords-list" class="tag-cloud">
+                    <p class="placeholder-text">Keywords will appear here after analysis.</p>
+                </div>
+            </div>
+
+            <!-- Deep Dive -->
+            <div class="glass-card deep-dive" data-corner="top-left">
+                <div class="card-header">
+                    <span class="card-header__icon">⚠</span>
+                    <h2>DETAILED INSIGHTS</h2>
+                </div>
+                <div class="insights-grid">
+                    <div>
+                        <h3 class="neon-label neon-label--red">▸ MOST COMPLAINED ABOUT</h3>
+                        <ul id="hated-features">
+                            <li class="placeholder-text">Nothing yet</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="neon-label neon-label--yellow">▸ COMMON BUGS REPORTED</h3>
+                        <ul id="common-bugs">
+                            <li class="placeholder-text">Nothing yet</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Chat -->
+            <div class="glass-card chat-terminal" data-corner="top-right">
+                <div class="card-header">
+                    <span class="card-header__icon">⟐</span>
+                    <h2>ASK THE AI</h2>
+                    <span class="status-badge">LIVE <span class="pulse-dot pulse-dot--green"></span></span>
+                </div>
+                <div class="chat-history" id="chat-history">
+                    <div class="sys-msg">Run an analysis first, then ask me anything about the results.</div>
+                </div>
+                <form id="chat-form" class="chat-input-wrapper">
+                    <span class="chat-prompt">›</span>
+                    <input type="text" id="chat-input" placeholder="Ask a follow-up question..." autocomplete="off">
+                    <button type="submit" class="btn-send" title="Send">
+                        <svg width="16" height="16" viewBox="0 0 15 15" fill="none"><path d="M1.20308 1.04312C1.00481 0.954998 0.772341 1.0048 0.627577 1.16641C0.482813 1.32802 0.458494 1.56455 0.567481 1.75254L3.91343 7.50002L0.567481 13.2475C0.458494 13.4355 0.482813 13.672 0.627577 13.8336C0.772341 13.9952 1.00481 14.045 1.20308 13.9569L14.5364 8.03378C14.7335 7.94617 14.8618 7.74706 14.8618 7.50002C14.8618 7.25298 14.7335 7.05387 14.5364 6.96626L1.20308 1.04312Z" fill="currentColor"/></svg>
+                    </button>
+                </form>
+            </div>
+
+        </main>
+
+        <footer class="footer">
+            <span>Reddit Rage Analyzer v2.0</span>
+            <span>·</span>
+            <span>Powered by AI</span>
+            <span>·</span>
+            <span class="footer-blink">█</span>
+        </footer>
+    </div>
+
+    <script src="/script.js?v=11"></script>
+</body>
+</html>
