@@ -20,7 +20,7 @@ from groq import Groq
 
 load_dotenv()
 
-app = FastAPI(title="Reddit Rage Analyzer API")
+app = FastAPI(title="Reddit Sentiment & Insight Analyzer API")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="frontend"), name="static")

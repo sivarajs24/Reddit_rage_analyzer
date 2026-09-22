@@ -17,4 +17,5 @@ python-multipart>=0.0.9
 pinecone-text
 langchain-groq
 apify-client
- 
+ragas
+datasets

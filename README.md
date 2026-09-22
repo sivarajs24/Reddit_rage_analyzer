@@ -1,4 +1,4 @@
-# Reddit Rage Analyzer - Advanced RAG Edition
+# Reddit Sentiment & Insight Analyzer - Advanced RAG Edition
 
 ## 1. Problem Statement
 In today's competitive digital market, user feedback is gold. However, a significant portion of honest, unfiltered feedback is scattered across Reddit—buried in unstructured text, complaint threads, and rants. Manually sifting through thousands of Reddit posts to identify common bugs, missing features, and overall sentiment for a specific product is incredibly time-consuming and prone to human bias. 
